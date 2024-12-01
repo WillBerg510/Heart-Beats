@@ -12,7 +12,7 @@ app.config['SECRET_KEY'] = os.urandom(64)
 client_id = '6763d6f8edfb46f790cc18ba91bd761b'
 client_secret = '2168293833d4470694944c0cdb469cdc'
 redirect_uri = 'http://localhost:5000/callback'
-scope = 'playlist-read-private, app-remote-control, streaming, user-top-read'
+scope = 'playlist-read-private, app-remote-control, streaming, user-top-read, user-read-playback-state'
 cache_handler = FlaskSessionCacheHandler(session)
 
 spotify_auth = SpotifyOAuth(
