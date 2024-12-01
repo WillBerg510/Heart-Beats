@@ -1,4 +1,4 @@
-import os
+import os, random
 
 import spotipy, flask
 from spotipy import Spotify
@@ -51,8 +51,18 @@ def get_playlists():
         playlists_info.append((item['name'], item['external_urls']['spotify']))
     playlists_html = '<br>'.join([f'{name}: {url}' for name, url in playlists_info])
 
-    top_track = spotify.current_user_top_tracks(limit=1)
-    spotify.start_playback(uris=[top_track['items'][0]['external_urls']['spotify']])
+    top_track = spotify.current_user_top_tracks(limit=10)
+
+    devices = spotify.devices()
+    device = None
+    for device in devices['devices']:
+        if device['is_active']:
+            device = device['id']
+            break
+        if device['type'] == "Computer":
+            device = device['id']
+            break
+    spotify.start_playback(uris=[top_track['items'][random.randint(0,9)]['external_urls']['spotify']], device_id=device)
 
     return playlists_html
 
