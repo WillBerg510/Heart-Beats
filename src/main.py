@@ -61,7 +61,6 @@ def get_playlists():
             break
         if device['type'] == "Computer":
             device = device['id']
-            break
     spotify.start_playback(uris=[top_track['items'][random.randint(0,9)]['external_urls']['spotify']], device_id=device)
 
     return playlists_html
