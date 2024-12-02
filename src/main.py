@@ -15,6 +15,8 @@ redirect_uri = 'http://localhost:5000/callback'
 scope = 'playlist-read-private, app-remote-control, streaming, user-top-read, user-read-playback-state'
 cache_handler = FlaskSessionCacheHandler(session)
 
+toCommunicate = ''
+
 spotify_auth = SpotifyOAuth(
     client_id=client_id,
     client_secret=client_secret,
@@ -63,12 +65,21 @@ def get_playlists():
             device = device['id']
     spotify.start_playback(uris=[top_track['items'][random.randint(0,9)]['external_urls']['spotify']], device_id=device)
 
+    global toCommunicate
+    toCommunicate = spotify.me()['display_name']
+
     return playlists_html
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('home'))
+
+@app.route('/initial_info')
+def initial_info():
+    return {
+        "username": toCommunicate
+    }
 
 if __name__ == "__main__":
     app.run(debug=True)
