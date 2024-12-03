@@ -8,7 +8,6 @@ class App extends React.Component {
     this.state ={
       poolMethod: '',
       username: '',
-      playlists : '',
     }
   }
 
@@ -31,7 +30,6 @@ class App extends React.Component {
   componentDidMount = async () => {
     this.setState({
       username: (await this.fetchInfo('http://localhost:5000/initial_info')).username,
-      playlists: (await this.fetchInfo('http://localhost:5000/get_playlists')),
     })
   }
 
@@ -54,7 +52,7 @@ class App extends React.Component {
           text="Your Top 3 Genres"
           method="favGenres"
         />
-        <p>{playlists}</p>
+        <p></p>
         <button>BEGIN</button>
       </div>
     );
