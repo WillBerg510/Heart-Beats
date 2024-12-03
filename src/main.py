@@ -1,5 +1,8 @@
 import os, random
 
+import TrackNode as Node
+import AdjList as List
+
 from spotipy import Spotify
 from spotipy.oauth2 import SpotifyOAuth
 from spotipy.cache_handler import FlaskSessionCacheHandler
@@ -51,6 +54,9 @@ def get_playlists():
     top_track['items'] += spotify.current_user_top_tracks(limit=50, offset=50)['items']
 
     top_track_info = []
+
+    adj_list = List.AdjList()
+
     for track in top_track['items']:
         if track is None:
             continue
@@ -64,13 +70,27 @@ def get_playlists():
                 bpm = song.bpm
                 print(f'{song.artist.name} | {song.bpm}')
                 break
-            if index >= 3:
+            if index >= 5:
                 break
 
-        if bpm != 0:
-            top_track_info.append((track['name'], bpm))
+        top_track_info.append((track['name'], bpm))
+        adj_list.add_node(Node.TrackNode(
+            name=track['name'],
+            artist=track['artists'][0]['name'],
+            cover_link=track['album']['images'][0]['url'],
+            bpm=bpm,
+            genres=spotify.artist(track['artists'][0]['id'])['genres']
+            ))
 
-    tracks_html = '<br>'.join([f'{name}: {bpm}' for name, bpm in top_track_info])
+    # tracks_html = '<br>'.join([f'{name}: {bpm}' for name, bpm in top_track_info])
+
+    tracks_html = '<br>'.join([f'{node[0].get_name()} | '
+                               f'Genres: {node[0].get_genres()} | '
+                               f'BPM: {node[0].get_bpm()}'
+                               f'<br> <img src={node[0].get_cover()} style=\"height:40%;\">'
+                               for node in adj_list.get_list().values()])
+
+
 
     devices = spotify.devices()
     device = None
@@ -80,7 +100,7 @@ def get_playlists():
             break
         if device['type'] == "Computer":
             device = device['id']
-    #spotify.start_playback(uris=[top_track['items'][random.randint(0,99)]['external_urls']['spotify']], device_id=device)
+    spotify.start_playback(uris=[top_track['items'][random.randint(0,99)]['external_urls']['spotify']], device_id=device)
 
     global toCommunicate
     toCommunicate = spotify.me()['display_name']
