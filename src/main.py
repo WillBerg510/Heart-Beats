@@ -51,9 +51,6 @@ def get_playlists():
         return redirect(auth_url)
 
     top_track = spotify.current_user_top_tracks(limit=50)
-    top_track['items'] += spotify.current_user_top_tracks(limit=50, offset=50)['items']
-
-    top_track_info = []
 
     adj_list = List.AdjList()
 
@@ -73,7 +70,6 @@ def get_playlists():
             if index >= 5:
                 break
 
-        top_track_info.append((track['name'], bpm))
         adj_list.add_node(Node.TrackNode(
             name=track['name'],
             artist=track['artists'][0]['name'],
@@ -81,8 +77,6 @@ def get_playlists():
             bpm=bpm,
             genres=spotify.artist(track['artists'][0]['id'])['genres']
             ))
-
-    # tracks_html = '<br>'.join([f'{name}: {bpm}' for name, bpm in top_track_info])
 
     tracks_html = '<br>'.join([f'{node[0].get_name()} | '
                                f'Genres: {node[0].get_genres()} | '
@@ -100,7 +94,8 @@ def get_playlists():
             break
         if device['type'] == "Computer":
             device = device['id']
-    spotify.start_playback(uris=[top_track['items'][random.randint(0,99)]['external_urls']['spotify']], device_id=device)
+
+    spotify.start_playback(uris=[top_track['items'][random.randint(0,49)]['external_urls']['spotify']], device_id=device)
 
     global toCommunicate
     toCommunicate = spotify.me()['display_name']
