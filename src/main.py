@@ -95,7 +95,7 @@ def get_playlists():
         if device['type'] == "Computer":
             device = device['id']
 
-    spotify.start_playback(uris=[top_track['items'][random.randint(0,49)]['external_urls']['spotify']], device_id=device)
+    #spotify.start_playback(uris=[top_track['items'][random.randint(0,49)]['external_urls']['spotify']], device_id=device)
 
     global toCommunicate
     toCommunicate = spotify.me()['display_name']

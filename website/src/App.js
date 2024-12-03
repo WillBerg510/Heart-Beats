@@ -8,6 +8,7 @@ class App extends React.Component {
     this.state ={
       poolMethod: '',
       username: '',
+      playlists : '',
     }
   }
 
@@ -29,13 +30,13 @@ class App extends React.Component {
 
   componentDidMount = async () => {
     this.setState({
-      username: (await this.fetchInfo('http://localhost:5000/initial_info')).username
+      username: (await this.fetchInfo('http://localhost:5000/initial_info')).username,
+      playlists: (await this.fetchInfo('http://localhost:5000/get_playlists')),
     })
-    console.log(await this.fetchInfo('https://api.getsongbpm.com/search/?api_key=bfafcd1a08c2aef417759a429e83a3ab&type=song&lookup=boulevard+of+broken+dreams'))
   }
 
   render() {
-    const { poolMethod, username } = this.state;
+    const { poolMethod, username, playlists } = this.state;
     return (
       <div className="App">
         <h1>HeartBeats</h1>
@@ -53,7 +54,7 @@ class App extends React.Component {
           text="Your Top 3 Genres"
           method="favGenres"
         />
-        <p></p>
+        <p>{playlists}</p>
         <button>BEGIN</button>
       </div>
     );
