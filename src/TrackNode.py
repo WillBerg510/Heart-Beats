@@ -9,6 +9,9 @@ class TrackNode:
     def get_name(self):
         return self.name
 
+    def get_artist(self):
+        return self.artist
+
     def get_bpm(self):
         return self.bpm
 

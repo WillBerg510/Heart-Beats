@@ -78,10 +78,14 @@ def get_playlists():
             genres=spotify.artist(track['artists'][0]['id'])['genres']
             ))
 
+    adj_list.form_connections()
+
     tracks_html = '<br>'.join([f'{node[0].get_name()} | '
                                f'Genres: {node[0].get_genres()} | '
-                               f'BPM: {node[0].get_bpm()}'
-                               f'<br> <img src={node[0].get_cover()} style=\"height:40%;\">'
+                               f'BPM: {node[0].get_bpm()} | '
+                               f'Connected to: {", ".join(similar_node.get_name() for similar_node in adj_list.get_adjacent(node[0]))} | '
+                               f'Similarity scores: {", ".join(str(similarity) for similarity in adj_list.get_similarity_scores(node[0]))}'
+                               f'<br> <img src={node[0].get_cover()} style=\"height:10%;\">'
                                for node in adj_list.get_list().values()])
 
 

@@ -34,7 +34,7 @@ class App extends React.Component {
   }
 
   render() {
-    const { poolMethod, username, playlists } = this.state;
+    const { poolMethod, username } = this.state;
     return (
       <div className="App">
         <h1>HeartBeats</h1>
