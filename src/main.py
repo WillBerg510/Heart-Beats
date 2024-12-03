@@ -75,7 +75,8 @@ def get_playlists():
             artist=track['artists'][0]['name'],
             cover_link=track['album']['images'][0]['url'],
             bpm=bpm,
-            genres=spotify.artist(track['artists'][0]['id'])['genres']
+            genres=spotify.artist(track['artists'][0]['id'])['genres'],
+            release_year=track['album']['release_date'][:4]
             ))
 
     adj_list.form_connections()
@@ -83,6 +84,7 @@ def get_playlists():
     tracks_html = '<br>'.join([f'{node[0].get_name()} | '
                                f'Genres: {node[0].get_genres()} | '
                                f'BPM: {node[0].get_bpm()} | '
+                               f'Release Year: {node[0].get_release_year()} | '
                                f'Connected to: {", ".join(similar_node.get_name() for similar_node in adj_list.get_adjacent(node[0]))} | '
                                f'Similarity scores: {", ".join(str(similarity) for similarity in adj_list.get_similarity_scores(node[0]))}'
                                f'<br> <img src={node[0].get_cover()} style=\"height:10%;\">'
