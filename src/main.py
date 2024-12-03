@@ -64,7 +64,7 @@ def get_playlists():
                 bpm = song.bpm
                 print(f'{song.artist.name} | {song.bpm}')
                 break
-            if index >= 5:
+            if index >= 3:
                 break
 
         if bpm != 0:
@@ -80,7 +80,7 @@ def get_playlists():
             break
         if device['type'] == "Computer":
             device = device['id']
-    spotify.start_playback(uris=[top_track['items'][random.randint(0,99)]['external_urls']['spotify']], device_id=device)
+    #spotify.start_playback(uris=[top_track['items'][random.randint(0,99)]['external_urls']['spotify']], device_id=device)
 
     global toCommunicate
     toCommunicate = spotify.me()['display_name']

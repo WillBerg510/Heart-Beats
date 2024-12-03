@@ -11,14 +11,15 @@ class App extends React.Component {
     }
   }
 
-  fetchInfo = async (route) => {
+  fetchInfo = async (address) => {
     try {
-      const response = await fetch(`http://localhost:5000/${route}`);
+      const response = await fetch(address);
       if (!response?.ok) throw Error('Did not receive expected data');
       const data = await response.json();
-      this.setState({ username: data.username })
+      return data;
     } catch (error) {
       console.log(error);
+      return null;
     }
   }
 
@@ -27,7 +28,10 @@ class App extends React.Component {
   }
 
   componentDidMount = async () => {
-    this.fetchInfo('initial_info')
+    this.setState({
+      username: (await this.fetchInfo('http://localhost:5000/initial_info')).username
+    })
+    console.log(await this.fetchInfo('https://api.getsongbpm.com/search/?api_key=bfafcd1a08c2aef417759a429e83a3ab&type=song&lookup=boulevard+of+broken+dreams'))
   }
 
   render() {
