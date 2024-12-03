@@ -1,10 +1,12 @@
 import os, random
 
-import spotipy, flask
 from spotipy import Spotify
 from spotipy.oauth2 import SpotifyOAuth
 from spotipy.cache_handler import FlaskSessionCacheHandler
 from flask import Flask, session, url_for, redirect, request
+import deezer
+
+deezer = deezer.Client()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(64)
@@ -45,15 +47,30 @@ def get_playlists():
         auth_url = spotify_auth.get_authorize_url()
         return redirect(auth_url)
 
-    playlists = spotify.current_user_playlists()
-    playlists_info = []
-    for item in playlists['items']:
-        if item is None:
-            continue
-        playlists_info.append((item['name'], item['external_urls']['spotify']))
-    playlists_html = '<br>'.join([f'{name}: {url}' for name, url in playlists_info])
+    top_track = spotify.current_user_top_tracks(limit=50)
+    top_track['items'] += spotify.current_user_top_tracks(limit=50, offset=50)['items']
 
-    top_track = spotify.current_user_top_tracks(limit=10)
+    top_track_info = []
+    for track in top_track['items']:
+        if track is None:
+            continue
+        deezer_track = deezer.search(track['name'])
+
+        bpm = 0
+        index = 0
+        for song in deezer_track:
+            index += 1
+            if song.title == track['name'] and song.artist.name == track['artists'][0]['name']:
+                bpm = song.bpm
+                print(f'{song.artist.name} | {song.bpm}')
+                break
+            if index >= 5:
+                break
+
+        if bpm != 0:
+            top_track_info.append((track['name'], bpm))
+
+    tracks_html = '<br>'.join([f'{name}: {bpm}' for name, bpm in top_track_info])
 
     devices = spotify.devices()
     device = None
@@ -63,12 +80,12 @@ def get_playlists():
             break
         if device['type'] == "Computer":
             device = device['id']
-    spotify.start_playback(uris=[top_track['items'][random.randint(0,9)]['external_urls']['spotify']], device_id=device)
+    spotify.start_playback(uris=[top_track['items'][random.randint(0,99)]['external_urls']['spotify']], device_id=device)
 
     global toCommunicate
     toCommunicate = spotify.me()['display_name']
 
-    return playlists_html
+    return tracks_html
 
 @app.route('/logout')
 def logout():
