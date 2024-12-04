@@ -1,5 +1,5 @@
 class TrackNode:
-    def __init__(self, name, artist, cover_link, bpm, genres, release_year, uri):
+    def __init__(self, name='', artist='', cover_link='', bpm=0, genres='', release_year='', uri='', duration=0):
         self.name = name
         self.artist = artist
         self.cover_link = cover_link
@@ -7,6 +7,7 @@ class TrackNode:
         self.genres = genres
         self.release_year = release_year
         self.uri = uri
+        self.duration = duration
 
     def get_name(self):
         return self.name
@@ -28,3 +29,6 @@ class TrackNode:
 
     def get_uri(self):
         return self.uri
+
+    def get_duration(self):
+        return self.duration

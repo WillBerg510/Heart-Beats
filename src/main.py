@@ -53,6 +53,7 @@ adj_list = List.AdjList()
 song_map = MapStructure.Map()
 pool = 0
 songs_loaded = False
+current_song = Node.TrackNode()
 
 spotify_auth = SpotifyOAuth(
     client_id=client_id,
@@ -98,8 +99,8 @@ def connected():
         return redirect(auth_url)
 
     if pool == 1:
-        top_track = spotify.current_user_top_tracks(limit=25)
-        #top_track['items'] += spotify.current_user_top_tracks(limit=50, offset=50)['items']
+        top_track = spotify.current_user_top_tracks(limit=50)
+        top_track['items'] += spotify.current_user_top_tracks(limit=50, offset=50)['items']
 
     #playlist = spotify.playlist_items(playlist_id="6bDQr1LIm5Ih1UtHAjd42M", fields="items")
     #playlist['items'] += spotify.playlist_items(playlist_id="6bDQr1LIm5Ih1UtHAjd42M", fields="items", offset=100)['items']
@@ -139,7 +140,8 @@ def connected():
                 bpm=bpm,
                 genres=spotify.artist(track['artists'][0]['id'])['genres'],
                 release_year=track['album']['release_date'][:4],
-                uri=track['external_urls']['spotify']
+                uri=track['external_urls']['spotify'],
+                duration=int(track['duration_ms']/1000),
             )
             adj_list.add_node(song_node)
             song_map.add_node((int(bpm / 10) * 10, int(bpm / 10) * 10 + 9), song_node)
@@ -153,14 +155,22 @@ def connected():
         if device['is_active']:
             device = device['id']
             break
-        if device['type'] == "Computer":
+        if device['type'] == "Computer" or device['type'] == "Smartphone":
             device = device['id']
 
     global songs_loaded
     songs_loaded = True
-
-    starting_song = adj_list.get_next_song(adj_list.get_starting_song(), shared_hr.value);
-    spotify.add_to_queue(uri=starting_song.get_uri(), device_id=device)
+    
+    song = adj_list.get_next_song(adj_list.get_starting_song(), shared_hr.value)
+    spotify.start_playback(uris=[song.get_uri()], device_id=device)
+    while True:
+        while not spotify.current_playback() or spotify.current_playback()['progress_ms'] / 1000 < song.get_duration() - 10:
+            time.sleep(1)
+        song = adj_list.get_next_song(song, shared_hr.value)
+        spotify.add_to_queue(uri=song.get_uri(), device_id=device)
+        while not spotify.current_playback()['progress_ms'] / 1000 < 5:
+            time.sleep(1)
+    
 
     tracks_html = '<br>'.join([f'{node[0].get_name()} | '
                                f'Genres: {node[0].get_genres()} | '

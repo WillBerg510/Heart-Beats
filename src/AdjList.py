@@ -5,6 +5,7 @@ from Similarity import determine_similarity
 class AdjList:
     def __init__(self):
         self.list = {}
+        self.last_played = []
 
     def get_list(self):
         return self.list
@@ -25,15 +26,19 @@ class AdjList:
         all_nodes = []
         for value in self.list.values():
             all_nodes.append(value[0])
-        return all_nodes[random.randint(0, len(all_nodes))]
+        return all_nodes[random.randint(0, len(all_nodes) - 1)]
     
     def get_next_song(self, node: Node.TrackNode, bpm):
         value = self.list[(node.get_name(), node.get_artist())]
         closest_distance = 1000
         closest_node = 0
         for next_node in value[1]:
-            if abs(next_node.get_bpm() - bpm) < closest_distance:
+            if abs(next_node.get_bpm() - bpm) < closest_distance and not next_node in self.last_played:
                 closest_node = next_node
+                closest_distance = abs(next_node.get_bpm() - bpm)
+        self.last_played.append(next_node)
+        if len(self.last_played) > 4:
+            self.last_played.pop()
         return closest_node
 
     def form_connections(self): # Connect nodes together by finding the most similar songs to each node

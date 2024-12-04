@@ -31,7 +31,8 @@ class App extends React.Component {
   }
 
   begin = async () => {
-    const { poolMethod } = this.state;
+    const { poolMethod, loading } = this.state;
+    if (loading == "Loading") return;
     if (poolMethod == 0) {
       this.setState({
         loading: "Please select a song pool."
