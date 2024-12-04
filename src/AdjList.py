@@ -31,7 +31,7 @@ class AdjList:
                 if node1 != node2:
                     similarity = determine_similarity(node1, node2)
 
-                    if len(highest_similarities) < 8:
+                    if len(highest_similarities) < 10:
                         most_similar_nodes.append(node2)
                         highest_similarities.append(similarity)
                     elif similarity > min(highest_similarities):

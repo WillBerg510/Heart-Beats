@@ -1,8 +1,8 @@
 def determine_similarity(node1, node2): # Return a similarity score of two songs/track nodes
   similarity = 0 # Maximum similarity score will be 1000
 
-  if node1.get_artist() == node2.get_artist(): # Artist match is worth 100 points
-      similarity += 100
+  if node1.get_artist() == node2.get_artist(): # Artist match is worth 50 points
+      similarity += 50
 
   if node1.get_genres() == [] or node2.get_genres() == []: # If genres can't be compared, add 40 points
       similarity += 40
@@ -39,9 +39,13 @@ def determine_similarity(node1, node2): # Return a similarity score of two songs
 
   name1 = node1.get_name()
   name2 = node2.get_name()
+
+  if name1[0].lower() == name2[0].lower():
+    similarity += 50 # If the songs have the same first character, 50 points are added
+
   shared_letters = 0
   for char in name1:
-      index = name2.find(char)
+      index = name2.lower().find(char.lower())
       if index != -1:
           shared_letters += 1
           name2 = name2[:index] + name2[index + 1:]

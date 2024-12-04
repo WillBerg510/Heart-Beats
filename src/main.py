@@ -53,6 +53,8 @@ def get_playlists():
         auth_url = spotify_auth.get_authorize_url()
         return redirect(auth_url)
 
+    #playlist = spotify.playlist_items(playlist_id="6bDQr1LIm5Ih1UtHAjd42M", fields="items")
+    #playlist['items'] += spotify.playlist_items(playlist_id="6bDQr1LIm5Ih1UtHAjd42M", fields="items", offset=100)['items']
     top_track = spotify.current_user_top_tracks(limit=50)
     top_track['items'] += spotify.current_user_top_tracks(limit=50, offset=50)['items']
 
@@ -60,9 +62,13 @@ def get_playlists():
     global song_map
 
     for track in top_track['items']:
+        #track = item['track']
         if track is None:
             continue
-        deezer_track = deezer.search(track['name'])
+
+        acceptable_symbols = [',', '\'', '-', '.', '(', ')', ' ', '\"', '!', '&']
+        track_name = ''.join(letter for letter in track['name'] if (letter.isalnum() or letter in acceptable_symbols))
+        deezer_track = deezer.search(track=track_name, artist=track['artists'][0]['name'])
 
         bpm = 0
         index = 0
@@ -71,8 +77,10 @@ def get_playlists():
             if song.title == track['name'] and song.artist.name == track['artists'][0]['name']:
                 bpm = song.bpm
                 break
-            if index >= 5:
+            if index >= 10:
                 break
+
+        print(track['name'] + " |  " + str(bpm))
 
         if bpm > 0:
             song_node = Node.TrackNode(
