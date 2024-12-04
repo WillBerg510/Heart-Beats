@@ -179,7 +179,11 @@ def initial_info():
     }
 
 if __name__ == "__main__":
+    # Creates a global variable for the heart rate that is shared with the parallel processes
     shared_hr = multiprocessing.Value('i', 0)
+    # Create and start the parallel process that will continuously update the user's heart rate
     heartrate = multiprocessing.Process(target=start_track, args=(shared_hr,))
     heartrate.start()
+
+    # Start the web app
     app.run(debug=True)
