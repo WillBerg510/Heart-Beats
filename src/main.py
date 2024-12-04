@@ -42,8 +42,10 @@ scope = ('playlist-read-private, '
          'app-remote-control, '
          'streaming, '
          'user-top-read, '
-         'user-read-playback-state, playlist-modify-public, '
-         'playlist-modify-private')
+         'user-read-playback-state, '
+         'playlist-modify-public, '
+         'playlist-modify-private'
+         )
 cache_handler = FlaskSessionCacheHandler(session)
 
 toCommunicate = ''
