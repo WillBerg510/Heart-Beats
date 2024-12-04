@@ -1,4 +1,5 @@
 import os, random, time, multiprocessing
+from datetime import datetime
 
 import TrackNode as Node
 import AdjList as List
@@ -37,7 +38,12 @@ app.config['SECRET_KEY'] = os.urandom(64)
 client_id = '6763d6f8edfb46f790cc18ba91bd761b'
 client_secret = '2168293833d4470694944c0cdb469cdc'
 redirect_uri = 'http://localhost:5000/callback'
-scope = 'playlist-read-private, app-remote-control, streaming, user-top-read, user-read-playback-state'
+scope = ('playlist-read-private, '
+         'app-remote-control, '
+         'streaming, '
+         'user-top-read, '
+         'user-read-playback-state, playlist-modify-public, '
+         'playlist-modify-private')
 cache_handler = FlaskSessionCacheHandler(session)
 
 toCommunicate = ''
@@ -80,6 +86,9 @@ def get_playlists():
     global adj_list
     global song_map
 
+    # List of song ids
+    playlist_songs = []
+
     for track in top_track['items']:
         #track = item['track']
         if track is None:
@@ -112,6 +121,7 @@ def get_playlists():
             )
             adj_list.add_node(song_node)
             song_map.add_node((int(bpm / 10) * 10, int(bpm / 10) * 10 + 9), song_node)
+            playlist_songs.append(track['uri'])
 
     adj_list.form_connections()
 
@@ -140,6 +150,24 @@ def get_playlists():
 
     global toCommunicate
     toCommunicate = spotify.me()['display_name']
+
+    # Make a playlist
+    time_now = datetime.now()
+    time_string = time_now.strftime('%Y-%m-%d %H:%M:%S')
+    user_id = spotify.me()['id']
+    new_playlist = spotify.user_playlist_create(
+        user=user_id,
+        name=f'Heart Beats: {time_string}',
+        public=False
+    )
+    spotify.user_playlist_add_tracks(
+        user=user_id,
+        playlist_id=new_playlist['id'],
+        tracks=playlist_songs)
+
+
+
+
 
     return tracks_html
 
