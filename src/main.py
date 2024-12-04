@@ -1,4 +1,4 @@
-import os, random
+import os, random, time, multiprocessing
 
 import TrackNode as Node
 import AdjList as List
@@ -9,6 +9,25 @@ from spotipy.oauth2 import SpotifyOAuth
 from spotipy.cache_handler import FlaskSessionCacheHandler
 from flask import Flask, session, url_for, redirect, request
 import deezer
+
+import asyncio
+import websockets
+
+async def heart_rate(shared_hr):
+    url = "wss://dev.pulsoid.net/api/v1/data/real_time?access_token=a051ca5c-1be4-4c94-91d1-c23937388f5c&response_mode=text_plain_only_heart_rate"
+    try:
+        async with websockets.connect(url) as websocket:
+            while True:
+                message = await websocket.recv()
+                shared_hr.value = int(message)
+
+    except Exception as e:
+        print(f"Error connecting to WebSocket: {e}")
+
+def start_track(shared_hr):
+    asyncio.run(heart_rate(shared_hr))
+
+
 
 deezer = deezer.Client()
 
@@ -22,8 +41,8 @@ scope = 'playlist-read-private, app-remote-control, streaming, user-top-read, us
 cache_handler = FlaskSessionCacheHandler(session)
 
 toCommunicate = ''
-adj_list = List.AdjList();
-song_map = MapStructure.Map();
+adj_list = List.AdjList()
+song_map = MapStructure.Map()
 
 spotify_auth = SpotifyOAuth(
     client_id=client_id,
@@ -136,4 +155,7 @@ def initial_info():
     }
 
 if __name__ == "__main__":
+    shared_hr = multiprocessing.Value('i', 0)
+    heartrate = multiprocessing.Process(target=start_track, args=(shared_hr,))
+    heartrate.start()
     app.run(debug=True)
