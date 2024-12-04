@@ -9,6 +9,7 @@ from spotipy import Spotify
 from spotipy.oauth2 import SpotifyOAuth
 from spotipy.cache_handler import FlaskSessionCacheHandler
 from flask import Flask, session, url_for, redirect, request
+from flask_cors import CORS
 import deezer
 
 import asyncio
@@ -28,12 +29,11 @@ async def heart_rate(shared_hr):
 def start_track(shared_hr):
     asyncio.run(heart_rate(shared_hr))
 
-
-
 deezer = deezer.Client()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(64)
+CORS(app)
 
 client_id = '6763d6f8edfb46f790cc18ba91bd761b'
 client_secret = '2168293833d4470694944c0cdb469cdc'
@@ -48,9 +48,10 @@ scope = ('playlist-read-private, '
          )
 cache_handler = FlaskSessionCacheHandler(session)
 
-toCommunicate = ''
+username = ''
 adj_list = List.AdjList()
 song_map = MapStructure.Map()
+pool = 0
 
 spotify_auth = SpotifyOAuth(
     client_id=client_id,
@@ -72,18 +73,33 @@ def home():
 @app.route('/callback')
 def callback():
     spotify_auth.get_access_token(request.args['code'])
-    return redirect(url_for('get_playlists'))
+    global username
+    username = spotify.me()['display_name']
+    return redirect(url_for('connected'))
 
-@app.route('/get_playlists')
-def get_playlists():
+@app.route('/begin', methods=['POST'])
+def begin():
+    global pool
+    pool = request.get_json()['pool']
+    return 'success', 204
+
+@app.route('/connected')
+def connected():
+    global pool
+    global current_song
+    print('Connected to Spotify account. Head to https://dsa-heartbeats.netlify.app/ to continue.')
+    while pool == 0:
+        time.sleep(0.01)
     if not spotify_auth.validate_token(cache_handler.get_cached_token()):
         auth_url = spotify_auth.get_authorize_url()
         return redirect(auth_url)
 
+    if pool == 1:
+        top_track = spotify.current_user_top_tracks(limit=25)
+        #top_track['items'] += spotify.current_user_top_tracks(limit=50, offset=50)['items']
+
     #playlist = spotify.playlist_items(playlist_id="6bDQr1LIm5Ih1UtHAjd42M", fields="items")
     #playlist['items'] += spotify.playlist_items(playlist_id="6bDQr1LIm5Ih1UtHAjd42M", fields="items", offset=100)['items']
-    top_track = spotify.current_user_top_tracks(limit=50)
-    top_track['items'] += spotify.current_user_top_tracks(limit=50, offset=50)['items']
 
     global adj_list
     global song_map
@@ -119,25 +135,14 @@ def get_playlists():
                 cover_link=track['album']['images'][0]['url'],
                 bpm=bpm,
                 genres=spotify.artist(track['artists'][0]['id'])['genres'],
-                release_year=track['album']['release_date'][:4]
+                release_year=track['album']['release_date'][:4],
+                uri=track['external_urls']['spotify']
             )
             adj_list.add_node(song_node)
             song_map.add_node((int(bpm / 10) * 10, int(bpm / 10) * 10 + 9), song_node)
             playlist_songs.append(track['uri'])
 
     adj_list.form_connections()
-
-    tracks_html = '<br>'.join([f'{node[0].get_name()} | '
-                               f'Genres: {node[0].get_genres()} | '
-                               f'BPM: {node[0].get_bpm()} | '
-                               f'Release Year: {node[0].get_release_year()} | '
-                               f'Connected to: {", ".join(similar_node.get_name() for similar_node in adj_list.get_adjacent(node[0]))} | '
-                               f'Similarity scores: {", ".join(str(similarity) for similarity in adj_list.get_similarity_scores(node[0]))}'
-                               f'<br> <img src={node[0].get_cover()} style=\"height:10%;\">'
-                               for node in adj_list.get_list().values()])
-
-    tracks_html += '<br>Tempo Range Map<br>'
-    tracks_html += '<br>'.join(str(tempo_range[0][0]) + '-' + str(tempo_range[0][1]) + ': ' + ', '.join(node.get_name() for node in tempo_range[1]) for tempo_range in song_map.get_map())
 
     devices = spotify.devices()
     device = None
@@ -148,10 +153,22 @@ def get_playlists():
         if device['type'] == "Computer":
             device = device['id']
 
-    #spotify.start_playback(uris=[top_track['items'][random.randint(0,49)]['external_urls']['spotify']], device_id=device)
+    starting_song = adj_list.get_next_song(adj_list.get_starting_song(), shared_hr.value);
+    spotify.add_to_queue(uri=starting_song.get_uri(), device_id=device)
 
-    global toCommunicate
-    toCommunicate = spotify.me()['display_name']
+    tracks_html = '<br>'.join([f'{node[0].get_name()} | '
+                               f'Genres: {node[0].get_genres()} | '
+                               f'BPM: {node[0].get_bpm()} | '
+                               f'Release Year: {node[0].get_release_year()} | '
+                               f'Connected to: {", ".join(similar_node.get_name() for similar_node in adj_list.get_adjacent(node[0]))} | '
+                               f'Similarity scores: {", ".join(str(similarity) for similarity in adj_list.get_similarity_scores(node[0]))}'
+                               f'<br> <img src={node[0].get_cover()} style=\"height:10%;\">'
+                               for node in adj_list.get_list().values()])
+
+    tracks_html += '<br><br>Tempo Range Map<br>'
+    tracks_html += '<br>'.join(str(tempo_range[0][0]) + '-' + str(tempo_range[0][1]) + ': ' + ', '.join(node.get_name() for node in tempo_range[1]) for tempo_range in song_map.get_map())
+
+    #spotify.start_playback(uris=[top_track['items'][random.randint(0,49)]['external_urls']['spotify']], device_id=device)
 
     # Make a playlist
     time_now = datetime.now()
@@ -162,10 +179,10 @@ def get_playlists():
         name=f'Heart Beats: {time_string}',
         public=False
     )
-    spotify.user_playlist_add_tracks(
-        user=user_id,
-        playlist_id=new_playlist['id'],
-        tracks=playlist_songs)
+    #spotify.user_playlist_add_tracks(
+    #    user=user_id,
+    #    playlist_id=new_playlist['id'],
+    #    tracks=playlist_songs)
 
     return tracks_html
 
@@ -174,10 +191,17 @@ def logout():
     session.clear()
     return redirect(url_for('home'))
 
-@app.route('/initial_info')
-def initial_info():
+@app.route('/username')
+def username_info():
+    global username
     return {
-        "username": toCommunicate
+        "username": username,
+    }
+
+@app.route('/heart_rate')
+def hr_route():
+    return {
+        "heartRate": shared_hr.value,
     }
 
 if __name__ == "__main__":

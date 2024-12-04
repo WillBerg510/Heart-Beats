@@ -1,4 +1,5 @@
 import TrackNode as Node
+import random
 from Similarity import determine_similarity
 
 class AdjList:
@@ -19,6 +20,21 @@ class AdjList:
     def get_similarity_scores(self, node: Node.TrackNode):
         if (node.get_name(), node.get_artist()) in self.list:
             return self.list[(node.get_name(), node.get_artist())][2]
+
+    def get_starting_song(self):
+        all_nodes = []
+        for value in self.list.values():
+            all_nodes.append(value[0])
+        return all_nodes[random.randint(0, len(all_nodes))]
+    
+    def get_next_song(self, node: Node.TrackNode, bpm):
+        value = self.list[(node.get_name(), node.get_artist())]
+        closest_distance = 1000
+        closest_node = 0
+        for next_node in value[1]:
+            if abs(next_node.get_bpm() - bpm) < closest_distance:
+                closest_node = next_node
+        return closest_node
 
     def form_connections(self): # Connect nodes together by finding the most similar songs to each node
         all_nodes = []
