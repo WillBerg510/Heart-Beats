@@ -165,10 +165,6 @@ def get_playlists():
         playlist_id=new_playlist['id'],
         tracks=playlist_songs)
 
-
-
-
-
     return tracks_html
 
 @app.route('/logout')
