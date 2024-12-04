@@ -2,6 +2,7 @@ import os, random
 
 import TrackNode as Node
 import AdjList as List
+import Map as MapStructure
 
 from spotipy import Spotify
 from spotipy.oauth2 import SpotifyOAuth
@@ -21,6 +22,8 @@ scope = 'playlist-read-private, app-remote-control, streaming, user-top-read, us
 cache_handler = FlaskSessionCacheHandler(session)
 
 toCommunicate = ''
+adj_list = List.AdjList();
+song_map = MapStructure.Map();
 
 spotify_auth = SpotifyOAuth(
     client_id=client_id,
@@ -51,8 +54,10 @@ def get_playlists():
         return redirect(auth_url)
 
     top_track = spotify.current_user_top_tracks(limit=50)
+    top_track['items'] += spotify.current_user_top_tracks(limit=50, offset=50)['items']
 
-    adj_list = List.AdjList()
+    global adj_list
+    global song_map
 
     for track in top_track['items']:
         if track is None:
@@ -65,19 +70,21 @@ def get_playlists():
             index += 1
             if song.title == track['name'] and song.artist.name == track['artists'][0]['name']:
                 bpm = song.bpm
-                print(f'{song.artist.name} | {song.bpm}')
                 break
             if index >= 5:
                 break
 
-        adj_list.add_node(Node.TrackNode(
-            name=track['name'],
-            artist=track['artists'][0]['name'],
-            cover_link=track['album']['images'][0]['url'],
-            bpm=bpm,
-            genres=spotify.artist(track['artists'][0]['id'])['genres'],
-            release_year=track['album']['release_date'][:4]
-            ))
+        if bpm > 0:
+            song_node = Node.TrackNode(
+                name=track['name'],
+                artist=track['artists'][0]['name'],
+                cover_link=track['album']['images'][0]['url'],
+                bpm=bpm,
+                genres=spotify.artist(track['artists'][0]['id'])['genres'],
+                release_year=track['album']['release_date'][:4]
+            )
+            adj_list.add_node(song_node)
+            song_map.add_node((int(bpm / 10) * 10, int(bpm / 10) * 10 + 9), song_node)
 
     adj_list.form_connections()
 
@@ -90,7 +97,8 @@ def get_playlists():
                                f'<br> <img src={node[0].get_cover()} style=\"height:10%;\">'
                                for node in adj_list.get_list().values()])
 
-
+    tracks_html += '<br>Tempo Range Map<br>'
+    tracks_html += '<br>'.join(str(tempo_range[0][0]) + '-' + str(tempo_range[0][1]) + ': ' + ', '.join(node.get_name() for node in tempo_range[1]) for tempo_range in song_map.get_map())
 
     devices = spotify.devices()
     device = None
