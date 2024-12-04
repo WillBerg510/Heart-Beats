@@ -52,6 +52,7 @@ username = ''
 adj_list = List.AdjList()
 song_map = MapStructure.Map()
 pool = 0
+songs_loaded = False
 
 spotify_auth = SpotifyOAuth(
     client_id=client_id,
@@ -79,9 +80,11 @@ def callback():
 
 @app.route('/begin', methods=['POST'])
 def begin():
-    global pool
-    pool = request.get_json()['pool']
-    return 'success', 204
+    if username != '':
+        global pool
+        pool = request.get_json()['pool']
+        return 'success', 204
+    return 'failed', 405
 
 @app.route('/connected')
 def connected():
@@ -153,6 +156,9 @@ def connected():
         if device['type'] == "Computer":
             device = device['id']
 
+    global songs_loaded
+    songs_loaded = True
+
     starting_song = adj_list.get_next_song(adj_list.get_starting_song(), shared_hr.value);
     spotify.add_to_queue(uri=starting_song.get_uri(), device_id=device)
 
@@ -202,6 +208,12 @@ def username_info():
 def hr_route():
     return {
         "heartRate": shared_hr.value,
+    }
+
+@app.route('/songs_loaded')
+def loaded():
+    return {
+        "loaded": songs_loaded,
     }
 
 if __name__ == "__main__":

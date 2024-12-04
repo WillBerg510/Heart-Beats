@@ -22,7 +22,6 @@ const UsernameText = ({ }) => {
     }, 1000)
 
     async function fetchData() {
-      console.log('a');
       setUsername((await fetchInfo('http://localhost:5000/username'))?.username);
     }
     

@@ -22,7 +22,6 @@ const HeartRateText = ({ }) => {
     }, 1000)
 
     async function fetchData() {
-      console.log('a');
       setHeartRate((await fetchInfo('http://localhost:5000/heart_rate'))?.heartRate);
     }
     

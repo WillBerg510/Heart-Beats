@@ -9,7 +9,8 @@ class App extends React.Component {
     super();
     this.state ={
       poolMethod: 0,
-      heartRate: '',
+      loading: '',
+      songsLoaded: false,
     }
   }
 
@@ -31,19 +32,45 @@ class App extends React.Component {
 
   begin = async () => {
     const { poolMethod } = this.state;
-    await fetch('http://localhost:5000/begin', {
-      method: "POST",
-      body: JSON.stringify({
-        pool: poolMethod,
-      }),
-      headers: {
-        "Content-Type": "application/json"
-      }
+    if (poolMethod == 0) {
+      this.setState({
+        loading: "Please select a song pool."
+      });
+      return;
+    }
+    this.setState({
+      loading: "Loading..."
     })
+    try {
+      const response = await fetch('http://localhost:5000/begin', {
+        method: "POST",
+        body: JSON.stringify({
+          pool: poolMethod,
+        }),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+      if (!response?.ok) throw Error('Did not receive expected data');
+    } catch (error) {
+      console.log(error);
+      this.setState({
+        loading: "Unable to communicate with backend."
+      })
+    }
+    const interval = setInterval(async () => {
+      const response = (await this.fetchInfo('http://localhost:5000/songs_loaded'))?.loaded;
+      if (response) {
+        this.setState({
+          loading: '',
+        })
+        clearInterval(interval);
+      }
+    }, 500)
   }
 
   render() {
-    const { poolMethod, heartRate } = this.state;
+    const { poolMethod, loading } = this.state;
     return (
       <div className="App">
         <h1>HeartBeats</h1>
@@ -53,16 +80,9 @@ class App extends React.Component {
           text="Your Top 100 Favorite Tracks"
           method={1}
         />
-        <PoolMethod poolMethod={poolMethod} setPoolMethod={this.setPoolMethod}
-          text="Your Top 10 Favorite Artists"
-          method={2}
-        />
-        <PoolMethod poolMethod={poolMethod} setPoolMethod={this.setPoolMethod}
-          text="Your Top 3 Genres"
-          method={3}
-        />
         <p></p>
         <button onClick={this.begin}>BEGIN</button>
+        <p>{loading}</p>
         <HeartRateText/>
       </div>
     );
