@@ -8,7 +8,6 @@ class App extends React.Component {
     this.state ={
       poolMethod: '',
       username: '',
-      testData: '',
     }
   }
 
@@ -30,13 +29,12 @@ class App extends React.Component {
 
   componentDidMount = async () => {
     this.setState({
-      username: (await this.fetchInfo('http://localhost:5000/initial_info')).username,
-      testData: (await this.fetchInfo('http://dev.pulsoid.net/api/v1/data/real_time?access_token=a051ca5c-1be4-4c94-91d1-c23937388f5c'))
+      username: (await this.fetchInfo('http://localhost:5000/initial_info')).username
     })
   }
 
   render() {
-    const { poolMethod, username, testData } = this.state;
+    const { poolMethod, username } = this.state;
     return (
       <div className="App">
         <h1>HeartBeats</h1>
@@ -54,7 +52,7 @@ class App extends React.Component {
           text="Your Top 3 Genres"
           method="favGenres"
         />
-        <p>{testData}</p>
+        <p></p>
         <button>BEGIN</button>
       </div>
     );
