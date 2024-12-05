@@ -102,11 +102,10 @@ def connected():
         return redirect(auth_url)
 
     if pool == 1:
-        top_track = spotify.current_user_top_tracks(limit=25)
-        #top_track['items'] += spotify.current_user_top_tracks(limit=50, offset=50)['items']
+        track_list = spotify.current_user_top_tracks(limit=50)
 
-    #playlist = spotify.playlist_items(playlist_id="6bDQr1LIm5Ih1UtHAjd42M", fields="items")
-    #playlist['items'] += spotify.playlist_items(playlist_id="6bDQr1LIm5Ih1UtHAjd42M", fields="items", offset=100)['items']
+    if pool == 2:
+        track_list = spotify.playlist(playlist_id="2jTYruOcUvFyDcLJZvAp2q")['tracks']
 
     global adj_list
     global song_map
@@ -114,8 +113,9 @@ def connected():
     # List of song ids
     playlist_songs = []
 
-    for track in top_track['items']:
-        #track = item['track']
+    for track in track_list['items']:
+        if pool == 2:
+            track = track['track']
         if track is None:
             continue
 
