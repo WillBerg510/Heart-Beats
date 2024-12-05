@@ -3,6 +3,8 @@ import './App.css';
 import PoolMethod from './PoolMethod';
 import UsernameText from './UsernameText';
 import HeartRateText from './HeartRateText';
+import DataStructure from './DataStructure';
+import CurrentlyPlaying from './CurrentlyPlaying';
 
 class App extends React.Component {
   constructor() {
@@ -11,6 +13,7 @@ class App extends React.Component {
       poolMethod: 0,
       loading: '',
       songsLoaded: false,
+      structure: '',
     }
   }
 
@@ -30,12 +33,22 @@ class App extends React.Component {
     this.setState({poolMethod: method});
   }
 
+  setStructure = (newStructure) => {
+    this.setState({structure: newStructure});
+  }
+
   begin = async () => {
-    const { poolMethod, loading } = this.state;
+    const { poolMethod, loading, structure } = this.state;
     if (loading == "Loading") return;
     if (poolMethod == 0) {
       this.setState({
         loading: "Please select a song pool."
+      });
+      return;
+    }
+    if (structure == '') {
+      this.setState({
+        loading: "Please select a data structure."
       });
       return;
     }
@@ -47,6 +60,7 @@ class App extends React.Component {
         method: "POST",
         body: JSON.stringify({
           pool: poolMethod,
+          dataStructure: structure,
         }),
         headers: {
           "Content-Type": "application/json"
@@ -71,7 +85,7 @@ class App extends React.Component {
   }
 
   render() {
-    const { poolMethod, loading } = this.state;
+    const { poolMethod, loading, structure } = this.state;
     return (
       <div className="App">
         <h1>HeartBeats</h1>
@@ -81,10 +95,18 @@ class App extends React.Component {
           text="Your Top 100 Favorite Tracks"
           method={1}
         />
+        <h2>Select data structure:</h2>
+        <DataStructure structure={structure} setStructure={this.setStructure}
+          text="Graph"
+        />
+        <DataStructure structure={structure} setStructure={this.setStructure}
+          text="Map"
+        />
         <p></p>
         <button onClick={this.begin}>BEGIN</button>
         <p>{loading}</p>
         <HeartRateText/>
+        <CurrentlyPlaying structure={structure}/>
       </div>
     );
   }

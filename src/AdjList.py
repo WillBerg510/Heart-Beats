@@ -36,9 +36,10 @@ class AdjList:
             if abs(next_node.get_bpm() - bpm) < closest_distance and not next_node in self.last_played:
                 closest_node = next_node
                 closest_distance = abs(next_node.get_bpm() - bpm)
-        self.last_played.append(next_node)
+        self.last_played.append(closest_node)
         if len(self.last_played) > 4:
-            self.last_played.pop()
+            self.last_played.pop(0)
+        print(' '.join(last_played_node.get_name() for last_played_node in self.last_played))
         return closest_node
 
     def form_connections(self): # Connect nodes together by finding the most similar songs to each node
