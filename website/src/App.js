@@ -14,6 +14,7 @@ class App extends React.Component {
       loading: '',
       songsLoaded: false,
       structure: '',
+      playlistID: '',
     }
   }
 
@@ -37,8 +38,12 @@ class App extends React.Component {
     this.setState({structure: newStructure});
   }
 
+  changePlaylistID = (e) => {
+    this.setState({playlistID: e.target.value});
+  }
+
   begin = async () => {
-    const { poolMethod, loading, structure } = this.state;
+    const { poolMethod, loading, structure, playlistID } = this.state;
     if (loading == "Loading") return;
     if (poolMethod == 0) {
       this.setState({
@@ -61,6 +66,7 @@ class App extends React.Component {
         body: JSON.stringify({
           pool: poolMethod,
           dataStructure: structure,
+          IDofPlaylist: playlistID,
         }),
         headers: {
           "Content-Type": "application/json"
@@ -92,9 +98,14 @@ class App extends React.Component {
         <UsernameText/>
         <h2>Select song pool:</h2>
         <PoolMethod poolMethod={poolMethod} setPoolMethod={this.setPoolMethod}
-          text="Your Top 100 Favorite Tracks"
+          text="Your Top 50 Favorite Tracks"
           method={1}
         />
+        <PoolMethod poolMethod={poolMethod} setPoolMethod={this.setPoolMethod}
+          text="Playlist"
+          method={2}
+        />
+        <input type="text" name="playlist_id" placeholder="Playlist ID" onChange={this.changePlaylistID}/>
         <h2>Select data structure:</h2>
         <DataStructure structure={structure} setStructure={this.setStructure}
           text="Graph"

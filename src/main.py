@@ -65,6 +65,7 @@ pool = 0
 songs_loaded = False
 current_song = Node.TrackNode()
 data_structure = ''
+playlistID = ''
 
 # Spotify authentication object
 spotify_auth = SpotifyOAuth(
@@ -99,8 +100,10 @@ def begin():
     if username != '':
         global pool
         global data_structure
+        global playlistID
         pool = request.get_json()['pool']
         data_structure = request.get_json()['dataStructure']
+        playlistID = request.get_json()['IDofPlaylist']
         return 'success', 204
     return 'failed', 405
 
@@ -108,6 +111,7 @@ def begin():
 def connected():
     global pool
     global current_song
+    global playlistID
     print('Connected to Spotify account. Head to https://dsa-heartbeats.netlify.app/ to continue.')
     while pool == 0:
         time.sleep(0.01)
@@ -119,7 +123,7 @@ def connected():
         track_list = spotify.current_user_top_tracks(limit=50)
 
     if pool == 2:
-        track_list = spotify.playlist(playlist_id="2jTYruOcUvFyDcLJZvAp2q")['tracks']
+        track_list = spotify.playlist(playlist_id=playlistID)['tracks']
 
     global adj_list
     global song_map
@@ -225,10 +229,10 @@ def connected():
         name=f'Heart Beats: {time_string}',
         public=False
     )
-    #spotify.user_playlist_add_tracks(
-    #    user=user_id,
-    #    playlist_id=new_playlist['id'],
-    #    tracks=playlist_songs)
+    spotify.user_playlist_add_tracks(
+        user=user_id,
+        playlist_id=new_playlist['id'],
+        tracks=playlist_songs)
 
     return tracks_html
 
