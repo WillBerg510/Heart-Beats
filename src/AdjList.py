@@ -37,7 +37,7 @@ class AdjList:
                 closest_node = next_node
                 closest_distance = abs(next_node.get_bpm() - bpm)
         self.last_played.append(closest_node)
-        if len(self.last_played) > 4:
+        if len(self.last_played) > 5:
             self.last_played.pop(0)
         return closest_node
 
