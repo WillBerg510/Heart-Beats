@@ -79,6 +79,7 @@ spotify_auth = SpotifyOAuth(
 )
 spotify = Spotify(auth_manager=spotify_auth)
 
+# Initial routing framework with Flask from a Spotipy tutorial by Imdad Codes.
 @app.route('/')
 def home():
     # Checks to see if the user is not authenticated with Spotify.
@@ -89,6 +90,7 @@ def home():
     # Otherwise, start the main program.
     return redirect(url_for('get_playlists'))
 
+# Spotify app requires a callback URL after authentication is successful.
 @app.route('/callback')
 def callback():
     spotify_auth.get_access_token(request.args['code'])
@@ -108,6 +110,7 @@ def begin():
         return 'success', 204
     return 'failed', 405
 
+# First creates an empty playlist, then adds all the songs played from the session to the playlist.
 def playlistCreation(playlist_songs):
     global playlist_requested
 
@@ -126,6 +129,7 @@ def playlistCreation(playlist_songs):
         tracks=playlist_songs)
 
     playlist_requested = False
+
 
 @app.route('/connected')
 def connected():
@@ -246,6 +250,7 @@ def connected():
                 if playlist_requested:
                     playlistCreation(playlist_songs)
 
+    # This code won't ever run, but we used it to test out fetching info from the Spotify API and adding it to our graph
     tracks_html = '<br>'.join([f'{node[0].get_name()} | '
                                f'Genres: {node[0].get_genres()} | '
                                f'BPM: {node[0].get_bpm()} | '
