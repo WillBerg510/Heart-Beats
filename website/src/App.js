@@ -42,6 +42,10 @@ class App extends React.Component {
     this.setState({playlistID: e.target.value});
   }
 
+  makePlaylist = async () => {
+    await this.fetchInfo('http://localhost:5000/make_playlist');
+  }
+
   begin = async () => {
     const { poolMethod, loading, structure, playlistID } = this.state;
     if (loading == "Loading") return;
@@ -78,20 +82,23 @@ class App extends React.Component {
       this.setState({
         loading: "Unable to communicate with backend."
       })
+      return
     }
+    
     const interval = setInterval(async () => {
       const response = (await this.fetchInfo('http://localhost:5000/songs_loaded'))?.loaded;
       if (response) {
         this.setState({
           loading: '',
         })
+        this.setState({songsLoaded: true});
         clearInterval(interval);
       }
     }, 500)
   }
 
   render() {
-    const { poolMethod, loading, structure } = this.state;
+    const { poolMethod, loading, structure, songsLoaded } = this.state;
     return (
       <div className="App">
         <h1>HeartBeats</h1>
@@ -115,6 +122,8 @@ class App extends React.Component {
         />
         <p></p>
         <button onClick={this.begin}>BEGIN</button>
+        <p></p>
+        {songsLoaded && (<button onClick={this.makePlaylist}>Create Playlist From Songs Played</button>)}
         <p>{loading}</p>
         <HeartRateText/>
         <CurrentlyPlaying structure={structure}/>

@@ -82,6 +82,6 @@ class Map:
       if bpm > 300:
         bpm = 0
     self.last_played.append(result)
-    if len(self.last_played) > 4:
+    if len(self.last_played) > 5:
       self.last_played.pop(0)
     return result

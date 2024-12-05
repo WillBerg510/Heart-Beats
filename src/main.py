@@ -66,6 +66,7 @@ songs_loaded = False
 current_song = Node.TrackNode()
 data_structure = ''
 playlistID = ''
+playlist_requested = False
 
 # Spotify authentication object
 spotify_auth = SpotifyOAuth(
@@ -106,6 +107,25 @@ def begin():
         playlistID = request.get_json()['IDofPlaylist']
         return 'success', 204
     return 'failed', 405
+
+def playlistCreation(playlist_songs):
+    global playlist_requested
+
+    # Make a playlist
+    time_now = datetime.now()
+    time_string = time_now.strftime('%Y-%m-%d %H:%M:%S')
+    user_id = spotify.me()['id']
+    new_playlist = spotify.user_playlist_create(
+        user=user_id,
+        name=f'HeartBeats: {time_string}',
+        public=False
+    )
+    spotify.user_playlist_add_tracks(
+        user=user_id,
+        playlist_id=new_playlist['id'],
+        tracks=playlist_songs)
+
+    playlist_requested = False
 
 @app.route('/connected')
 def connected():
@@ -173,7 +193,6 @@ def connected():
             )
             adj_list.add_node(song_node)
             song_map.add_node((int(bpm / 10) * 10, int(bpm / 10) * 10 + 9), song_node)
-            playlist_songs.append(track['uri'])
     
     if data_structure == 'Graph':
         adj_list.form_connections()
@@ -195,23 +214,33 @@ def connected():
         spotify.start_playback(uris=[queue_song.get_uri()], device_id=device)
         while True:
             current_song = queue_song
-            while not spotify.current_playback() or spotify.current_playback()['progress_ms'] / 1000 < queue_song.get_duration() - 10:
+            playlist_songs.append(current_song.get_uri())
+            while not spotify.current_playback() or spotify.current_playback()['progress_ms'] / 1000 < queue_song.get_duration() - 3:
                 time.sleep(1)
+                if playlist_requested:
+                    playlistCreation(playlist_songs)
             queue_song = adj_list.get_next_song(queue_song, shared_hr.value)
             spotify.add_to_queue(uri=queue_song.get_uri(), device_id=device)
             while not spotify.current_playback()['progress_ms'] / 1000 < 5:
                 time.sleep(1)
+                if playlist_requested:
+                    playlistCreation(playlist_songs)
     elif data_structure == 'Map':
         queue_song = song_map.get_starting_song(shared_hr.value)
         spotify.start_playback(uris=[queue_song.get_uri()], device_id=device)
         while True:
             current_song = queue_song
-            while not spotify.current_playback() or spotify.current_playback()['progress_ms'] / 1000 < queue_song.get_duration() - 10:
+            playlist_songs.append(current_song.get_uri())
+            while not spotify.current_playback() or spotify.current_playback()['progress_ms'] / 1000 < queue_song.get_duration() - 3:
                 time.sleep(1)
+                if playlist_requested:
+                    playlistCreation(playlist_songs)
             queue_song = song_map.get_next_song(queue_song, shared_hr.value)
             spotify.add_to_queue(uri=queue_song.get_uri(), device_id=device)
             while not spotify.current_playback()['progress_ms'] / 1000 < 5:
                 time.sleep(1)
+                if playlist_requested:
+                    playlistCreation(playlist_songs)
 
     tracks_html = '<br>'.join([f'{node[0].get_name()} | '
                                f'Genres: {node[0].get_genres()} | '
@@ -225,21 +254,13 @@ def connected():
     tracks_html += '<br><br>Tempo Range Map<br>'
     tracks_html += '<br>'.join(str(tempo_range[0][0]) + '-' + str(tempo_range[0][1]) + ': ' + ', '.join(node.get_name() for node in tempo_range[1]) for tempo_range in song_map.get_map())
 
-    # Make a playlist
-    time_now = datetime.now()
-    time_string = time_now.strftime('%Y-%m-%d %H:%M:%S')
-    user_id = spotify.me()['id']
-    new_playlist = spotify.user_playlist_create(
-        user=user_id,
-        name=f'HeartBeats: {time_string}',
-        public=False
-    )
-    spotify.user_playlist_add_tracks(
-        user=user_id,
-        playlist_id=new_playlist['id'],
-        tracks=playlist_songs)
-
     return tracks_html
+
+@app.route('/make_playlist')
+def make_playlist():
+    global playlist_requested
+    playlist_requested = True
+    return 'success', 204
 
 @app.route('/logout')
 def logout():
