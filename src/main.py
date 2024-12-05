@@ -124,6 +124,13 @@ def connected():
 
     if pool == 2:
         track_list = spotify.playlist(playlist_id=playlistID)['tracks']
+        num_tracks = track_list['total'] - 100
+        if num_tracks > 0:
+            num_tracks = num_tracks // 100
+            while num_tracks > 0:
+                num_tracks -= 1
+                add_tracks = spotify.playlist(playlist_id="2jTYruOcUvFyDcLJZvAp2q")['tracks']
+
 
     global adj_list
     global song_map
@@ -218,15 +225,13 @@ def connected():
     tracks_html += '<br><br>Tempo Range Map<br>'
     tracks_html += '<br>'.join(str(tempo_range[0][0]) + '-' + str(tempo_range[0][1]) + ': ' + ', '.join(node.get_name() for node in tempo_range[1]) for tempo_range in song_map.get_map())
 
-    #spotify.start_playback(uris=[top_track['items'][random.randint(0,49)]['external_urls']['spotify']], device_id=device)
-
     # Make a playlist
     time_now = datetime.now()
     time_string = time_now.strftime('%Y-%m-%d %H:%M:%S')
     user_id = spotify.me()['id']
     new_playlist = spotify.user_playlist_create(
         user=user_id,
-        name=f'Heart Beats: {time_string}',
+        name=f'HeartBeats: {time_string}',
         public=False
     )
     spotify.user_playlist_add_tracks(
