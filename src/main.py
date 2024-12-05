@@ -15,26 +15,36 @@ import deezer
 import asyncio
 import websockets
 
+# Asynchronous method to continuously monitor and record the user's heart rate
 async def heart_rate(shared_hr):
+    # Pulsoid's websocket URL
     url = "wss://dev.pulsoid.net/api/v1/data/real_time?access_token=a051ca5c-1be4-4c94-91d1-c23937388f5c&response_mode=text_plain_only_heart_rate"
     try:
+        # Upon a successful websocket connection
         async with websockets.connect(url) as websocket:
+            # Run forever
             while True:
+                # Wait for a message from the websocket, which is the user's current heart rate
                 message = await websocket.recv()
+                # Update the user's heart rate on the backend
                 shared_hr.value = int(message)
 
     except Exception as e:
         print(f"Error connecting to WebSocket: {e}")
 
+# This method is used for multiprocessing since it normally doesn't work with async methods.
 def start_track(shared_hr):
+    # Runs the async method to monitor and record heart rate.
     asyncio.run(heart_rate(shared_hr))
 
+# Initialize the Deezer client so we can interact with the API.
 deezer = deezer.Client()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(64)
 CORS(app)
 
+# Spotify Application Details
 client_id = '6763d6f8edfb46f790cc18ba91bd761b'
 client_secret = '2168293833d4470694944c0cdb469cdc'
 redirect_uri = 'http://localhost:5000/callback'
@@ -56,6 +66,7 @@ songs_loaded = False
 current_song = Node.TrackNode()
 data_structure = ''
 
+# Spotify authentication object
 spotify_auth = SpotifyOAuth(
     client_id=client_id,
     client_secret=client_secret,
@@ -68,9 +79,12 @@ spotify = Spotify(auth_manager=spotify_auth)
 
 @app.route('/')
 def home():
+    # Checks to see if the user is not authenticated with Spotify.
     if not spotify_auth.validate_token(cache_handler.get_cached_token()):
+        # If they aren't redirect them to the authentication URL
         auth_url = spotify_auth.get_authorize_url()
         return redirect(auth_url)
+    # Otherwise, start the main program.
     return redirect(url_for('get_playlists'))
 
 @app.route('/callback')
@@ -102,11 +116,10 @@ def connected():
         return redirect(auth_url)
 
     if pool == 1:
-        top_track = spotify.current_user_top_tracks(limit=50)
-        top_track['items'] += spotify.current_user_top_tracks(limit=50, offset=50)['items']
+        track_list = spotify.current_user_top_tracks(limit=50)
 
-    #playlist = spotify.playlist_items(playlist_id="6bDQr1LIm5Ih1UtHAjd42M", fields="items")
-    #playlist['items'] += spotify.playlist_items(playlist_id="6bDQr1LIm5Ih1UtHAjd42M", fields="items", offset=100)['items']
+    if pool == 2:
+        track_list = spotify.playlist(playlist_id="2jTYruOcUvFyDcLJZvAp2q")['tracks']
 
     global adj_list
     global song_map
@@ -114,8 +127,9 @@ def connected():
     # List of song ids
     playlist_songs = []
 
-    for track in top_track['items']:
-        #track = item['track']
+    for track in track_list['items']:
+        if pool == 2:
+            track = track['track']
         if track is None:
             continue
 
