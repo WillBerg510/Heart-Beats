@@ -127,9 +127,13 @@ def connected():
         num_tracks = track_list['total'] - 100
         if num_tracks > 0:
             num_tracks = num_tracks // 100
+            print(num_tracks)
+            offset = 100
             while num_tracks > 0:
                 num_tracks -= 1
-                add_tracks = spotify.playlist(playlist_id="2jTYruOcUvFyDcLJZvAp2q")['tracks']
+                add_tracks = spotify.playlist_tracks(playlist_id=playlistID, limit=100, offset=offset)['items']
+                offset += 100
+                track_list['items'] += add_tracks
 
 
     global adj_list
