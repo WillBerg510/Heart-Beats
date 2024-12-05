@@ -102,8 +102,8 @@ def connected():
         return redirect(auth_url)
 
     if pool == 1:
-        top_track = spotify.current_user_top_tracks(limit=25)
-        #top_track['items'] += spotify.current_user_top_tracks(limit=50, offset=50)['items']
+        top_track = spotify.current_user_top_tracks(limit=50)
+        top_track['items'] += spotify.current_user_top_tracks(limit=50, offset=50)['items']
 
     #playlist = spotify.playlist_items(playlist_id="6bDQr1LIm5Ih1UtHAjd42M", fields="items")
     #playlist['items'] += spotify.playlist_items(playlist_id="6bDQr1LIm5Ih1UtHAjd42M", fields="items", offset=100)['items']
@@ -149,8 +149,9 @@ def connected():
             adj_list.add_node(song_node)
             song_map.add_node((int(bpm / 10) * 10, int(bpm / 10) * 10 + 9), song_node)
             playlist_songs.append(track['uri'])
-
-    adj_list.form_connections()
+    
+    if data_structure == 'Graph':
+        adj_list.form_connections()
 
     devices = spotify.devices()
     device = None
@@ -164,16 +165,28 @@ def connected():
     global songs_loaded
     songs_loaded = True
     
-    queue_song = adj_list.get_next_song(adj_list.get_starting_song(), shared_hr.value)
-    spotify.start_playback(uris=[queue_song.get_uri()], device_id=device)
-    while True:
-        current_song = queue_song
-        while not spotify.current_playback() or spotify.current_playback()['progress_ms'] / 1000 < queue_song.get_duration() - 10:
-            time.sleep(1)
-        queue_song = adj_list.get_next_song(queue_song, shared_hr.value)
-        spotify.add_to_queue(uri=queue_song.get_uri(), device_id=device)
-        while not spotify.current_playback()['progress_ms'] / 1000 < 5:
-            time.sleep(1)
+    if data_structure == 'Graph':
+        queue_song = adj_list.get_next_song(adj_list.get_starting_song(), shared_hr.value)
+        spotify.start_playback(uris=[queue_song.get_uri()], device_id=device)
+        while True:
+            current_song = queue_song
+            while not spotify.current_playback() or spotify.current_playback()['progress_ms'] / 1000 < queue_song.get_duration() - 10:
+                time.sleep(1)
+            queue_song = adj_list.get_next_song(queue_song, shared_hr.value)
+            spotify.add_to_queue(uri=queue_song.get_uri(), device_id=device)
+            while not spotify.current_playback()['progress_ms'] / 1000 < 5:
+                time.sleep(1)
+    elif data_structure == 'Map':
+        queue_song = song_map.get_starting_song(shared_hr.value)
+        spotify.start_playback(uris=[queue_song.get_uri()], device_id=device)
+        while True:
+            current_song = queue_song
+            while not spotify.current_playback() or spotify.current_playback()['progress_ms'] / 1000 < queue_song.get_duration() - 10:
+                time.sleep(1)
+            queue_song = song_map.get_next_song(queue_song, shared_hr.value)
+            spotify.add_to_queue(uri=queue_song.get_uri(), device_id=device)
+            while not spotify.current_playback()['progress_ms'] / 1000 < 5:
+                time.sleep(1)
 
     tracks_html = '<br>'.join([f'{node[0].get_name()} | '
                                f'Genres: {node[0].get_genres()} | '
@@ -245,11 +258,21 @@ def song_information():
     if data_structure == "Graph":
         i = 0
         for connected_song in adj_list.get_adjacent(current_song):
-            information["otherSongs"][i] = {
+            information["otherSongs"]["id" + str(i)] = {
                 "name": connected_song.get_name(),
                 "bpm": connected_song.get_bpm(),
                 "artist": connected_song.get_artist(),
                 "album_cover": connected_song.get_cover()
+            }
+            i += 1
+    if data_structure == "Map":
+        i = 0
+        for tempo_song in song_map.get_nodes((int(shared_hr.value / 10) * 10, int(shared_hr.value / 10) * 10 + 9)):
+            information["otherSongs"]["id" + str(i)] = {
+                "name": tempo_song.get_name(),
+                "bpm": tempo_song.get_bpm(),
+                "artist": tempo_song.get_artist(),
+                "album_cover": tempo_song.get_cover()
             }
             i += 1
     return information
