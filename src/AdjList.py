@@ -12,6 +12,7 @@ class AdjList:
 
     def add_node(self, node: Node.TrackNode):
         if (node.get_name(), node.get_artist()) not in self.list:
+            # Each node is a dictionary with a tuple(name, artist) as the key and a list[node object, [neighbors], [weights]] as the values
             self.list[(node.get_name(), node.get_artist())] = [node ,[], []]
 
     def get_adjacent(self, node: Node.TrackNode):
