@@ -39,7 +39,6 @@ class AdjList:
         self.last_played.append(closest_node)
         if len(self.last_played) > 4:
             self.last_played.pop(0)
-        print(' '.join(last_played_node.get_name() for last_played_node in self.last_played))
         return closest_node
 
     def form_connections(self): # Connect nodes together by finding the most similar songs to each node

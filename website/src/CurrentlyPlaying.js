@@ -35,28 +35,25 @@ const CurrentlyPlaying = ({ structure }) => {
       {(playing && playing.thisSong?.name) && (<div>
           <p>Currently playing: <b>{playing.thisSong.name}</b> by {playing.thisSong.artist} (BPM {playing.thisSong.bpm})</p>
           <img src={playing.thisSong.album_cover} height={120}/>
-        {(structure == "Graph" && playing.otherSongs[9]) && (<div>
+        {(structure == "Graph" && playing.otherSongs) && (<div>
           <p>Connected to these most similar songs:</p>
-          <p><b>{playing.otherSongs[0].name}</b> by {playing.otherSongs[0].artist} (BPM {playing.otherSongs[0].bpm})</p>
-          <img src={playing.otherSongs[0].album_cover} height={60}/>
-          <p><b>{playing.otherSongs[1].name}</b> by {playing.otherSongs[1].artist} (BPM {playing.otherSongs[1].bpm})</p>
-          <img src={playing.otherSongs[1].album_cover} height={60}/>
-          <p><b>{playing.otherSongs[2].name}</b> by {playing.otherSongs[2].artist} (BPM {playing.otherSongs[2].bpm})</p>
-          <img src={playing.otherSongs[2].album_cover} height={60}/>
-          <p><b>{playing.otherSongs[3].name}</b> by {playing.otherSongs[3].artist} (BPM {playing.otherSongs[3].bpm})</p>
-          <img src={playing.otherSongs[3].album_cover} height={60}/>
-          <p><b>{playing.otherSongs[4].name}</b> by {playing.otherSongs[4].artist} (BPM {playing.otherSongs[4].bpm})</p>
-          <img src={playing.otherSongs[4].album_cover} height={60}/>
-          <p><b>{playing.otherSongs[5].name}</b> by {playing.otherSongs[5].artist} (BPM {playing.otherSongs[5].bpm})</p>
-          <img src={playing.otherSongs[5].album_cover} height={60}/>
-          <p><b>{playing.otherSongs[6].name}</b> by {playing.otherSongs[6].artist} (BPM {playing.otherSongs[6].bpm})</p>
-          <img src={playing.otherSongs[6].album_cover} height={60}/>
-          <p><b>{playing.otherSongs[7].name}</b> by {playing.otherSongs[7].artist} (BPM {playing.otherSongs[7].bpm})</p>
-          <img src={playing.otherSongs[7].album_cover} height={60}/>
-          <p><b>{playing.otherSongs[8].name}</b> by {playing.otherSongs[8].artist} (BPM {playing.otherSongs[8].bpm})</p>
-          <img src={playing.otherSongs[8].album_cover} height={60}/>
-          <p><b>{playing.otherSongs[9].name}</b> by {playing.otherSongs[9].artist} (BPM {playing.otherSongs[9].bpm})</p>
-          <img src={playing.otherSongs[9].album_cover} height={60}/>
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((index) => (<>
+            {(playing.otherSongs["id" + index]) && (<div>
+              <p><b>{playing.otherSongs["id" + index].name}</b> by {playing.otherSongs["id" + index].artist} (BPM {playing.otherSongs["id" + index].bpm})</p>
+              <img src={playing.otherSongs["id" + index].album_cover} height={60}/>
+              </div>)}
+            </>
+          ))}
+        </div>)}
+        {(structure == "Map" && playing.otherSongs) && (<div>
+          <p>Songs within the BPM range of the current heartbeat:</p>
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((index) => (<>
+            {(playing.otherSongs["id" + index]) && (<div>
+              <p><b>{playing.otherSongs["id" + index].name}</b> by {playing.otherSongs["id" + index].artist} (BPM {playing.otherSongs["id" + index].bpm})</p>
+              <img src={playing.otherSongs["id" + index].album_cover} height={60}/>
+              </div>)}
+            </>
+          ))}
         </div>)}
       </div>)}
     </>
